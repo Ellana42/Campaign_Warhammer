@@ -5,7 +5,8 @@ class World:
     def __init__(self, player_list=['Raphael', 'Sam', 'Marius']):
 
         self.player_list = player_list
-        self.width, self.height = 8, 6
+        self.width, self.height = 30, 20
+        self.number_armies = 5
         self.terrain_types = ['p', 'm', 'd', 'f', 'h']
         self.vision_range = 2
         self.players = {name: Player(name, self)
@@ -22,7 +23,7 @@ class World:
 
     def generate_armies(self):
         for owner in self.players.values():
-            for _ in range(2):
+            for _ in range(self.number_armies):
                 tile = self.random_tile()
                 x, y = tile.get_coordinates()
                 army = Army(owner, x, y)

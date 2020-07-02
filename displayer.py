@@ -39,7 +39,8 @@ class Displayer:
     def display(self):
         self.window.fill((0, 0, 0))
         self.board.update()
-        self.window.blit(self.board.get_surface(), self.board.coordinates)
+        self.move_camera()
+        self.window.blit(self.board.get_surface(), self.simple_conv(self.board.x, self.board.y))
         display.update()
 
 
@@ -91,8 +92,8 @@ class Displayer:
 
     # # Conversion tools ======================================================
 
-    # def simple_conv(self, x, y):
-    #     return (x if y % 2 == 0 else x + 0.5) * self.tilew, 0.75 * y * self.tileh
+    def simple_conv(self, x, y):
+        return (x if y % 2 == 0 else x + 0.5) * self.tilew, 0.75 * y * self.tileh
 
     # def conv_center(self, size, x, y):
     #     convx, convy = self.conv(x, y)
@@ -115,10 +116,7 @@ class Displayer:
 class Screen:
     def __init__(self, displayer, width=1440, height=810):
         self.displayer = displayer
-
-        self.tilew, self.tileh = self.displayer.tilew, self.displayer.tileh
         self.width, self.height = width, height
-
         self.window = display.set_mode((self.width, self.height))
 
         game_icon = image.load('graphics/game_icon.png')
@@ -206,7 +204,7 @@ class Board(DisplayLayer):
         self.terrain_layer = TerrainLayer(self.world, self.displayer).surface
         self.surface = self.make_empty_surface()
 
-        self.coordinates = (0,0)
+        self.x, self.y = 0, 0
 
         self.board_graphics = {}
         self.army_icons = {}
@@ -242,6 +240,3 @@ class Board(DisplayLayer):
             self.surface.blit(
                 self.graphics['highlight'],
                 self.conv(self.pointer.selection[0], self.pointer.selection[1]))
-
-
-
