@@ -18,8 +18,6 @@ class Displayer:
 
         self.board = Board(self.world, self, self.game)
 
-        self.world_tiles = [(x, y) for x in range(self.world.width)
-                            for y in range(self.world.height)]
 
     def load_graphics(self):
         self.menu_graphics = {
@@ -73,44 +71,8 @@ class Displayer:
         if self.pointer.y + self.board.y > 4:
             self.board.y -= 1
 
-    def display_armies(self):
-        for army in self.world.get_armies():
-            if self.game.current_player.can_view(army.x, army.y):
-                army_icon = self.army_icons[army.owner.name]
-                self.board.display_on_board(army_icon, army.x, army.y, centered=True, size=army_icon.get_rect().size)
-
-    # def hide_undiscovered(self):
-    #     for (x, y) in self.world_tiles:
-    #         if not self.game.current_player.has_discovered(x, y):
-    #             self.window.blit(self.graphics['fog'], self.conv(x, y))
-
-    # def hide_out_of_view(self):
-    #     for (x, y) in self.world_tiles:
-    #         if self.game.current_player.has_discovered(x, y):
-    #             if not self.game.current_player.can_view(x, y):
-    #                 self.window.blit(self.graphics['hide'], self.conv(x, y))
-
-    # # Conversion tools ======================================================
-
     def simple_conv(self, x, y):
         return (x if y % 2 == 0 else x + 0.5) * self.tilew, 0.75 * y * self.tileh
-
-    # def conv_center(self, size, x, y):
-    #     convx, convy = self.conv(x, y)
-    #     imw, imh = size
-    #     convx += int(0.5 * self.tilew - 0.5 * imw)
-    #     convy += int(0.5 * self.tileh - 0.5 * imh)
-    #     return convx, convy
-
-    # def conv(self, x, y, centered=False, size=None):
-    #     x, y = (x if y % 2 == 0 else x + 0.5) * self.tilew, 0.75 * y * self.tileh
-    #     if not centered:
-    #         return x, y
-    #     else:
-    #         width, height = size
-    #         x += int(0.5 * self.tilew - 0.5 * width)
-    #         y += int(0.5 * self.tileh - 0.5 * height)
-    #         return x, y
 
 
 class Screen:
@@ -201,6 +163,9 @@ class Board(DisplayLayer):
         self.game = game
         self.pointer = self.displayer.pointer
 
+        self.world_tiles = [(x, y) for x in range(self.world.width)
+                            for y in range(self.world.height)]
+
         self.terrain_layer = TerrainLayer(self.world, self.displayer).surface
         self.surface = self.make_empty_surface()
 
@@ -224,6 +189,8 @@ class Board(DisplayLayer):
     def update(self):
         self.surface.blit(self.terrain_layer, (0, 0))
         self.display_armies()
+        self.hide_out_of_view()
+        self.hide_undiscovered()
         self.display_selector()
 
     def display_armies(self):
@@ -240,3 +207,14 @@ class Board(DisplayLayer):
             self.surface.blit(
                 self.graphics['highlight'],
                 self.conv(self.pointer.selection[0], self.pointer.selection[1]))
+
+    def hide_undiscovered(self):
+        for (x, y) in self.world_tiles:
+            if not self.game.current_player.has_discovered(x, y):
+                self.surface.blit(self.graphics['fog'], self.conv(x, y))
+
+    def hide_out_of_view(self):
+        for (x, y) in self.world_tiles:
+            if self.game.current_player.has_discovered(x, y):
+                if not self.game.current_player.can_view(x, y):
+                    self.surface.blit(self.graphics['hide'], self.conv(x, y))
