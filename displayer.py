@@ -1,4 +1,5 @@
 from pygame import *
+import math
 
 class Displayer:
     def __init__(self, world, pointer, game):
@@ -156,6 +157,35 @@ class TerrainLayer(DisplayLayer):
         return surface
 
 
+class CloudLayer(DisplayLayer):
+    def __init__(self, world, displayer):
+        super().__init__(world, displayer)
+
+        self.fog = image.load('graphics/fog.png').convert_alpha()
+        self.surface = self.tile_up().convert_alpha()
+        # self.uncover()
+
+    def tile_up(self):
+        surface = self.make_empty_surface()
+
+        for x in range(self.ncol):
+            for y in range(self.nline):
+                surface.blit(
+                    self.fog, self.simple_conv(x, y))
+        return surface
+
+    def uncover(self, x=0, y=0):
+        draw.circle(self.surface, (255, 255, 255, 0), (x, y), 200)
+
+    def drawRegularPolygon(self, color, x, y, radius):
+      pts = []
+      for i in range(6):
+        x = x + radius * math.cos(math.pi * 2/3 + math.pi * 2 * i / 6)
+        y = y + radius * math.sin(math.pi * 2/3 + math.pi * 2 * i / 6)
+        pts.append([int(x), int(y)])
+      pygame.draw.polygon(self.surface, color, pts)
+
+
 
 class Board(DisplayLayer):
     def __init__(self, world, displayer, game):
@@ -167,6 +197,7 @@ class Board(DisplayLayer):
                             for y in range(self.world.height)]
 
         self.terrain_layer = TerrainLayer(self.world, self.displayer).surface
+        self.cloud_layer = CloudLayer(self.world, self.displayer)
         self.surface = self.make_empty_surface()
 
         self.x, self.y = 0, 0
@@ -186,11 +217,15 @@ class Board(DisplayLayer):
                            'Raphael': image.load('graphics/Orion.png').convert_alpha(),
                            'Sam': image.load('graphics/Archaon.png').convert_alpha()}
 
+    def light_update(self):
+        pass
+
     def update(self):
         self.surface.blit(self.terrain_layer, (0, 0))
         self.display_armies()
-        self.hide_out_of_view()
-        self.hide_undiscovered()
+        # self.cloud_layer.uncover()
+        # self.surface.blit(self.cloud_layer.surface, (0, 0))
+        # self.hide_undiscovered()
         self.display_selector()
 
     def display_armies(self):
@@ -212,9 +247,6 @@ class Board(DisplayLayer):
         for (x, y) in self.world_tiles:
             if not self.game.current_player.has_discovered(x, y):
                 self.surface.blit(self.graphics['fog'], self.conv(x, y))
-
-    def hide_out_of_view(self):
-        for (x, y) in self.world_tiles:
-            if self.game.current_player.has_discovered(x, y):
+            else :
                 if not self.game.current_player.can_view(x, y):
                     self.surface.blit(self.graphics['hide'], self.conv(x, y))
